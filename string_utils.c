@@ -9,7 +9,8 @@ char* adicionar_aspas(const char *str_original)
 
     /* Aloca memória para a nova string */
     char *nova_str = (char *)malloc(tamanho_nova * sizeof(char));
-    if (nova_str == NULL) {
+    if (nova_str == NULL) 
+    {
         fprintf(stderr, "Erro ao alocar memória.\n");
         exit(EXIT_FAILURE);
     }

@@ -20,4 +20,6 @@ int main ()
     printf("Digite o CNPJ buscado: ");
     scanf("%s", cnpj_procurado);
     busca_cnpj(adicionar_aspas(cnpj_procurado), file);
+
+    return 0;
 }
