@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "empresa.h"
+#include "busca.h"
 
 #define TAMANHO_BLOCO 1000000
 
@@ -28,11 +29,12 @@ int busca_binaria(Empresa *empresas, int tamanho, const char *cnpj_procurado)
     return -1; /* CNPJ não encontrado */
 }
 
-int compara_cnpj(const void *a, const void *b) {
+int compara_cnpj(const void *a, const void *b) 
+{
     return strcmp(((Empresa *)a)->cnpj, ((Empresa *)b)->cnpj);
 }
 
-void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado) 
+Empresa *aloca_empresas()
 {
     Empresa *empresas = malloc(TAMANHO_BLOCO * sizeof(Empresa));
     if (!empresas) 
@@ -41,59 +43,79 @@ void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado)
         exit(EXIT_FAILURE);
     }
 
+    return empresas;
+}
+
+void aloca_memoria_campos(Empresa *empresa, const char *cnpj, const char *nome, const char *natureza_juridica,
+                          const char *qualificacao_responsavel, const char *capital_social, const char *porte,
+                          const char *ente_federativo) 
+{
+    empresa->cnpj = malloc(strlen(cnpj) + 1);
+    empresa->nome = malloc(strlen(nome) + 1);
+    empresa->natureza_juridica = malloc(strlen(natureza_juridica) + 1);
+    empresa->qualificacao_responsavel = malloc(strlen(qualificacao_responsavel) + 1);
+    empresa->capital_social = malloc(strlen(capital_social) + 1);
+    empresa->porte = malloc(strlen(porte) + 1);
+    empresa->ente_federativo = malloc(strlen(ente_federativo) + 1);
+
+    if (!empresa->cnpj || !empresa->nome || !empresa->natureza_juridica ||
+        !empresa->qualificacao_responsavel || !empresa->capital_social ||
+        !empresa->porte || !empresa->ente_federativo) 
+    {
+        fprintf(stderr, "Erro de alocação de memória para campos.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void preenche_empresa(Empresa *empresa, const char *cnpj, const char *nome, const char *natureza_juridica,
+                      const char *qualificacao_responsavel, const char *capital_social, const char *porte,
+                      const char *ente_federativo) 
+{
+    strcpy(empresa->cnpj, cnpj);
+    strcpy(empresa->nome, nome);
+    strcpy(empresa->natureza_juridica, natureza_juridica);
+    strcpy(empresa->qualificacao_responsavel, qualificacao_responsavel);
+    strcpy(empresa->capital_social, capital_social);
+    strcpy(empresa->porte, porte);
+    strcpy(empresa->ente_federativo, ente_federativo);
+}
+
+int processa_linha(char *linha, Empresa *empresa) 
+{
+    char *cnpj = strtok(linha, ";");
+    char *nome = strtok(NULL, ";");
+    char *natureza_juridica = strtok(NULL, ";");
+    char *qualificacao_responsavel = strtok(NULL, ";");
+    char *capital_social = strtok(NULL, ";");
+    char *porte = strtok(NULL, ";");
+    char *ente_federativo = strtok(NULL, ";");
+
+    if (!cnpj || !nome || !natureza_juridica || !qualificacao_responsavel || !capital_social || !porte || !ente_federativo) 
+    {
+        return 0; /* Linha mal formatada */
+    }
+
+    aloca_memoria_campos(empresa, cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo);
+    preenche_empresa(empresa, cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo);
+    
+    return 1; /* Linha processada com sucesso */
+}
+
+void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado) 
+{
+    Empresa *empresas = aloca_empresas();
     int count = 0;
     char linha[256];
 
-    /* Leitura do bloco */
     while (fgets(linha, sizeof(linha), file)) 
     {
-        char *cnpj = strtok(linha, ";");
-        char *nome = strtok(NULL, ";");
-        char *natureza_juridica = strtok(NULL, ";");
-        char *qualificacao_responsavel = strtok(NULL, ";");
-        char *capital_social = strtok(NULL, ";");
-        char *porte = strtok(NULL, ";");
-        char *ente_federativo = strtok(NULL, ";");
-
-        /* printf("%s %s %s %s %s %s \n", cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo); */
-
-        /* Verificação de sucesso na tokenização */
-        if (!cnpj || !nome || !natureza_juridica || !qualificacao_responsavel || !capital_social || !porte || !ente_federativo) 
+        if (processa_linha(linha, &empresas[count])) 
         {
-            continue; /*  Ignorar linha mal formatada */
-        }
-
-        /* Alocação dinâmica para cada campo */
-        empresas[count].cnpj = malloc(strlen(cnpj) + 1);
-        empresas[count].nome = malloc(strlen(nome) + 1);
-        empresas[count].natureza_juridica = malloc(strlen(natureza_juridica) + 1);
-        empresas[count].qualificacao_responsavel = malloc(strlen(qualificacao_responsavel) + 1);
-        empresas[count].capital_social = malloc(strlen(capital_social) + 1);
-        empresas[count].porte = malloc(strlen(porte) + 1);
-        empresas[count].ente_federativo = malloc(strlen(ente_federativo) + 1);
-
-        /* Verificação de sucesso na alocação de memória */
-        if (!empresas[count].cnpj || !empresas[count].nome || !empresas[count].natureza_juridica ||
-            !empresas[count].qualificacao_responsavel || !empresas[count].capital_social ||
-            !empresas[count].porte || !empresas[count].ente_federativo) 
-        {
-            fprintf(stderr, "Erro de alocação de memória para campos.\n");
-            exit(EXIT_FAILURE);
-        }
-
-        /* Copia os dados para a estrutura */
-        strcpy(empresas[count].cnpj, cnpj);
-        strcpy(empresas[count].nome, nome);
-        strcpy(empresas[count].natureza_juridica, natureza_juridica);
-        strcpy(empresas[count].qualificacao_responsavel, qualificacao_responsavel);
-        strcpy(empresas[count].capital_social, capital_social);
-        strcpy(empresas[count].porte, porte);
-        strcpy(empresas[count].ente_federativo, ente_federativo);
-
-        count++;
-        if (count >= TAMANHO_BLOCO) 
-        {
-            break;
+            count++;
+            if (count >= TAMANHO_BLOCO) 
+            {
+                break;
+            }
         }
     }
 
@@ -107,6 +129,13 @@ void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado)
         *encontrado = 1;
     }
 
+    free_empresas(empresas, count);
+}
+
+
+
+void free_empresas(Empresa *empresas, int count)
+{
     /* Libera a memória alocada */
     int i;
     for (i = 0; i < count; i++) 
@@ -123,7 +152,7 @@ void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado)
     free(empresas);
 }
 
-void busca_cnpj(char *cnpj_procurado, FILE *file) 
+void busca_cnpj(char *cnpj_procurado, FILE *file)
 {
     int encontrado = 0;
 

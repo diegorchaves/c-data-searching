@@ -1,1 +1,1 @@
-char* adicionar_aspas(const char *str_original) ;
+char* adicionar_aspas(const char *str_original);
