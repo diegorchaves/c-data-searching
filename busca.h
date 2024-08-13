@@ -1,0 +1,1 @@
+void busca_cnpj(char *cnpj_procurado, FILE *file);
