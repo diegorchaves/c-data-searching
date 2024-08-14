@@ -7,31 +7,41 @@
 
 #define TAMANHO_BLOCO 1000000
 
-int busca_binaria(Empresa *empresas, int tamanho, const char *cnpj_procurado) 
+int busca_binaria(Empresa *empresas, int tamanho, const char *criterio_procurado,
+                  int busca_por_nome) 
 {
+
     int esquerda = 0;
     int direita = tamanho - 1;
+    int cmp;
 
     while (esquerda <= direita) 
     {
         int meio = (esquerda + direita) / 2;
-        int cmp = strcmp(empresas[meio].cnpj, cnpj_procurado);
 
-        if (cmp == 0) {
-            return meio; /* CNPJ encontrado */
-        } else if (cmp < 0) {
-            esquerda = meio + 1; /* CNPJ procurado está na metade direita */
-        } else {
-            direita = meio - 1; /* CNPJ procurado está na metade esquerda */
+        if(busca_por_nome)
+        {
+            cmp = strcmp(empresas[meio].nome, criterio_procurado);
+        }
+        else
+        {
+            cmp = strcmp(empresas[meio].cnpj, criterio_procurado);
+        }
+        if (cmp == 0) 
+        {
+            return meio; /* Criterio encontrado */
+        } 
+        else if (cmp < 0) 
+        {
+            esquerda = meio + 1; /* Criterio procurado está na metade direita */
+        } 
+        else 
+        {
+            direita = meio - 1; /* Criterio procurado está na metade esquerda */
         }
     }
 
-    return -1; /* CNPJ não encontrado */
-}
-
-int compara_cnpj(const void *a, const void *b) 
-{
-    return strcmp(((Empresa *)a)->cnpj, ((Empresa *)b)->cnpj);
+    return -1; /* Criterio não encontrado */
 }
 
 Empresa *aloca_empresas()
@@ -95,43 +105,14 @@ int processa_linha(char *linha, Empresa *empresa)
         return 0; /* Linha mal formatada */
     }
 
+    /* printf("%s  %s  %s  %s  %s  %s  %s\n", cnpj, nome, natureza_juridica, 
+            qualificacao_responsavel, capital_social, porte, ente_federativo); */
+
     aloca_memoria_campos(empresa, cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo);
     preenche_empresa(empresa, cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo);
     
     return 1; /* Linha processada com sucesso */
 }
-
-void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado) 
-{
-    Empresa *empresas = aloca_empresas();
-    int count = 0;
-    char linha[256];
-
-    while (fgets(linha, sizeof(linha), file)) 
-    {
-        if (processa_linha(linha, &empresas[count])) 
-        {
-            count++;
-            if (count >= TAMANHO_BLOCO) 
-            {
-                break;
-            }
-        }
-    }
-
-    qsort(empresas, count, sizeof(Empresa), compara_cnpj);
-
-    int indice = busca_binaria(empresas, count, cnpj_procurado);
-
-    if (indice != -1) 
-    {
-        imprime_empresa(&empresas[indice]);
-        *encontrado = 1;
-    }
-
-    free_empresas(empresas, count);
-}
-
 
 
 void free_empresas(Empresa *empresas, int count)
@@ -152,19 +133,59 @@ void free_empresas(Empresa *empresas, int count)
     free(empresas);
 }
 
-void busca_cnpj(char *cnpj_procurado, FILE *file)
+int compara_nome(const void *a, const void *b) 
+{
+    return strcmp(((Empresa *)a)->nome, ((Empresa *)b)->nome);
+}
+
+void processar_bloco(FILE *file, char *criterio_procurado, int *encontrado, 
+                    int busca_por_nome) 
+{
+    Empresa *empresas = aloca_empresas();
+    int count = 0;
+    char linha[256];
+
+    while (fgets(linha, sizeof(linha), file)) 
+    {
+        if (processa_linha(linha, &empresas[count])) 
+        {
+            count++;
+            if (count >= TAMANHO_BLOCO) 
+            {
+                break;
+            }
+        }
+    }
+
+    if(busca_por_nome)
+    {
+        qsort(empresas, count, sizeof(Empresa), compara_nome);
+    }
+
+    int indice = busca_binaria(empresas, count, criterio_procurado, busca_por_nome);
+
+    if (indice != -1) 
+    {
+        imprime_empresa(&empresas[indice]);
+        *encontrado = 1;
+    }
+
+    free_empresas(empresas, count);
+}
+
+void busca_por_criterio(char *criterio_procurado, FILE *file, int busca_por_nome)
 {
     int encontrado = 0;
 
     while (!encontrado && !feof(file)) 
     {
-        processar_bloco(file, cnpj_procurado, &encontrado);
+        processar_bloco(file, criterio_procurado, &encontrado, busca_por_nome);
     }
 
     fclose(file);
 
     if (!encontrado) 
     {
-        printf("CNPJ não encontrado.\n");
+        printf("Criterio não encontrado.\n");
     }
 }

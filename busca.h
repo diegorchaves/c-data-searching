@@ -1,4 +1,5 @@
-int busca_binaria(Empresa *empresas, int tamanho, const char *cnpj_procurado);
+int busca_binaria(Empresa *empresas, int tamanho, const char *criterio_procurado,
+                  int busca_por_nome);
 
 int compara_cnpj(const void *a, const void *b);
 
@@ -14,8 +15,9 @@ void preenche_empresa(Empresa *empresa, const char *cnpj, const char *nome, cons
 
 int processa_linha(char *linha, Empresa *empresa);
 
-void processar_bloco(FILE *file, char *cnpj_procurado, int *encontrado);
+void processar_bloco(FILE *file, char *criterio_procurado, int *encontrado, 
+                    int busca_por_nome);
 
 void free_empresas(Empresa *empresas, int count);
 
-void busca_cnpj(char *cnpj_procurado, FILE *file);
+void busca_por_criterio(char *criterio_procurado, FILE *file, int busca_por_nome);
