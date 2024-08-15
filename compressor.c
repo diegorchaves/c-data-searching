@@ -12,10 +12,15 @@ typedef struct {
 } Correspondencia;
 
 Correspondencia encontrarCorrespondencia(char *janela, char *buffer, int tamanhoJanela, int tamanhoBuffer) {
-    Correspondencia correspondencia = {0, 0, buffer[0]};
+    Correspondencia correspondencia;
+    int i, j;
+    
+    correspondencia.deslocamento = 0;
+    correspondencia.comprimento = 0;
+    correspondencia.proxChar = buffer[0];
 
-    for (int i = 0; i < tamanhoJanela; i++) {
-        int j = 0;
+    for (i = 0; i < tamanhoJanela; i++) {
+        j = 0;
         while (j < tamanhoBuffer && janela[i + j] == buffer[j]) {
             j++;
         }
@@ -35,19 +40,21 @@ void comprimirArquivo(FILE *entrada, FILE *saida) {
     int tamanhoJanela = 0;
     int tamanhoBuffer = fread(buffer, 1, TAMANHO_BUFFER, entrada);
     long totalBytesLidos = 0;
+    int tamanhoMovimento;
+    Correspondencia correspondencia;
 
     while (tamanhoBuffer > 0) {
-        Correspondencia correspondencia = encontrarCorrespondencia(janela, buffer, tamanhoJanela, tamanhoBuffer);
-        fwrite(&correspondencia, sizeof(Correspondencia), 1, saia);
+        correspondencia = encontrarCorrespondencia(janela, buffer, tamanhoJanela, tamanhoBuffer);
+        fwrite(&correspondencia, sizeof(Correspondencia), 1, saida);
 
-        int tamanhoMovimento = (tamanhoJanela - correspondencia.comprimento - 1 > 0) ? tamanhoJanela - correspondencia.comprimento - 1 : 0;
+        tamanhoMovimento = (tamanhoJanela - correspondencia.comprimento - 1 > 0) ? tamanhoJanela - correspondencia.comprimento - 1 : 0;
         memmove(janela, janela + correspondencia.comprimento + 1, tamanhoMovimento);
         memmove(janela + tamanhoMovimento, buffer, correspondencia.comprimento + 1);
 
         tamanhoJanela = (tamanhoJanela + correspondencia.comprimento + 1) < TAMANHO_JANELA ? tamanhoJanela + correspondencia.comprimento + 1 : TAMANHO_JANELA;
         totalBytesLidos += tamanhoBuffer;
         
-        if (totalBytesLidos % (100 * 1024 * 1024) < TAMANHO_BUFFER) { // A cada ~100 MB processados
+        if (totalBytesLidos % (100 * 1024 * 1024) < TAMANHO_BUFFER) { 
             printf("Bytes processados: %ld MB\n", totalBytesLidos / (1024 * 1024));
         }
 
@@ -58,20 +65,21 @@ void comprimirArquivo(FILE *entrada, FILE *saida) {
 }
 
 int main(int argc, char *argv[]) {
-    // Pra executar ./compressor Empresas.EMPRECSV saida_comprimida.lz77
+    FILE *entrada;
+    FILE *saida;
 
     if (argc != 3) {
         fprintf(stderr, "Uso: %s <arquivo_entrada> <arquivo_saida>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    FILE *entrada = fopen(argv[1], "rb");
+    entrada = fopen(argv[1], "rb");
     if (!entrada) {
         perror("Falha ao abrir o arquivo de entrada");
         return EXIT_FAILURE;
     }
 
-    FILE *saida = fopen(argv[2], "wb");
+    saida = fopen(argv[2], "wb");
     if (!saida) {
         perror("Falha ao abrir o arquivo de saída");
         fclose(entrada);
