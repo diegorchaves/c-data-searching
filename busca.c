@@ -5,7 +5,7 @@
 #include "empresa.h"
 #include "busca.h"
 
-#define TAMANHO_BLOCO 1000000
+#define TAMANHO_BLOCO 10000
 
 int busca_binaria(Empresa *empresas, int tamanho, const char *criterio_procurado,
                   int busca_por_nome) 
