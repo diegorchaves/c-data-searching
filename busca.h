@@ -1,3 +1,6 @@
+#ifndef BUSCA_H
+#define BUSCA_H
+
 int busca_binaria(Empresa *empresas, int tamanho, const char *criterio_procurado,
                   int busca_por_nome);
 
@@ -21,3 +24,5 @@ void processar_bloco(FILE *file, char *criterio_procurado, int *encontrado,
 void free_empresas(Empresa *empresas, int count);
 
 void busca_por_criterio(char *criterio_procurado, FILE *file, int busca_por_nome);
+
+#endif

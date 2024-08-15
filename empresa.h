@@ -1,3 +1,6 @@
+#ifndef EMPRESA_H
+#define EMPRESA_H
+
 typedef struct empresa Empresa;
 
 struct empresa 
@@ -12,3 +15,5 @@ struct empresa
 
     Empresa *next;
 };
+
+#endif

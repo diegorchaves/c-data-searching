@@ -105,9 +105,6 @@ int processa_linha(char *linha, Empresa *empresa)
         return 0; /* Linha mal formatada */
     }
 
-    /* printf("%s  %s  %s  %s  %s  %s  %s\n", cnpj, nome, natureza_juridica, 
-            qualificacao_responsavel, capital_social, porte, ente_federativo); */
-
     aloca_memoria_campos(empresa, cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo);
     preenche_empresa(empresa, cnpj, nome, natureza_juridica, qualificacao_responsavel, capital_social, porte, ente_federativo);
     
